@@ -1,0 +1,106 @@
+@startuml
+
+
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+skinparam linetype ortho
+skinparam nodesep 60
+skinparam ranksep 70
+skinparam noteBackgroundColor #FFFDE7
+skinparam noteBorderColor #BDB76B
+hide empty members
+
+
+class Main {
+  main(args : String[]) : void
+}
+
+
+
+
+class Client {
+  client : HttpClient
+  mapper : ObjectMapper
+
+  hentPolitibiler() : PolitiBilListe
+}
+
+note left of Client
+ GET https://erikrolspo.github.io/politibiler.json  
+ mapper.readValue() gir PolitiBilListe
+end note
+
+
+class PolitiBilListe {
+ biler : List<PolitiBil>
+ hentBiler() : List<PolitiBil>
+
+ .. Sortering ..
+  sorterEtterId(liste) : List<PolitiBil>
+
+ .. Filtrering ..
+  hentTilgjengeligeBiler(liste) : List<PolitiBil>
+
+ .. Oppslag ..
+  hentBilInfoPaRegNr(liste, regNr) : PolitiBil
+
+ .. Oppdatering ..
+  endreBilStatusPaRegNr(liste, regNr, nyttOppdrag) : void
+
+ .. Utskrift (konsoll) ..
+  PrintPolitiBilListe(liste) : void
+  PrintPolitiBil(bil) : void
+}
+
+note right of PolitiBilListe
+ <b>sorterEtterId</b>
+ Sorterer listen på stedet etter getId() (int),
+ slik at biler med id 1 kommer før biler med id 2.
+
+ <b>hentTilgjengeligeBiler</b>
+ Går gjennom listen og returnerer en ny liste
+ med bilene der status == "Tilgjengelig".
+
+
+ <b>hentBilInfoPaRegNr</b>
+ Returnerer første bil med matchende regNr,
+ ellers null.
+
+ <b>endreBilStatusPaRegNr</b>
+ Finner bilen med regNr. Hvis status ikke er
+ "Under vedlikehold", settes oppdrag = nyttOppdrag
+ og status = "I oppdrag".
+ Ingen endring hvis bilen er under vedlikehold
+ eller regNr ikke finnes.
+
+ <b>PrintPolitiBilListe / PrintPolitiBil</b>
+ Skriver bil(er) til konsollen for feilsøking.
+end note
+
+
+class PolitiBil {
+ id : String
+ merke : String
+ modell : String
+ arsmodell : int
+ regNr : String
+ status : String
+ oppdrag : String
+
+
+ gettereOgSettere()
+}
+
+note right of PolitiBil
+ <b>status</b>: "Tilgjengelig", "I oppdrag",
+ "Under vedlikehold", "På vei til hendelse"
+ <b>arsmodell</b> leses fra JSON-feltet "årsmodell"
+
+end note
+Main <.. Client : Returnerer liste
+Main ..> Client : Setter ignag uthenting fra API
+Main ..> PolitiBilListe : Kaller på (sortering, uthenting og endring) av biler
+Client ..> PolitiBilListe : Kaller på opprettelse av liste og fyller inn biler
+PolitiBilListe  o--  PolitiBil : biler
+
+@enduml
